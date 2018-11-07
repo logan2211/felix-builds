@@ -1,0 +1,25 @@
+language: go
+services:
+  - docker
+install: []
+script:
+  - git clone -b "${TRAVIS_BRANCH}" https://github.com/projectcalico/felix
+  - cd felix
+  - git rev-parse HEAD
+  - git status
+  - make update-tools
+  - make bin/calico-felix ARCH=amd64
+  - make bin/calico-felix ARCH=arm64
+  - make bin/calico-felix ARCH=ppc64le
+notifications:
+  email: false
+deploy:
+  skip_cleanup: true
+  provider: releases
+  file:
+    - bin/calico-felix-amd64
+    - bin/calico-felix-arm64
+    - bin/calico-felix-ppc64le
+  on:
+    repo: Logan2211/felix
+    tags: true
