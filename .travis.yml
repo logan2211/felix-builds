@@ -1,25 +1,14 @@
-language: go
-services:
-  - docker
-install: []
+language: minimal
+env:
+  global:
+    - secure: "BjAzSl3gF2OBaEfaQK1kDrIA0hBgmPSU/uY6stnGexSkstWl+/YA7wNDrutiy+XApoVNm+uRmdgS8i+8SLkhyBAakm+kddjydWQWvDGnvSxL7GXPBrbAsrSP83iFyaoMSgQ0K7BCO9fEAaA8bkz7GbRP7+7MOys+DPC/9expYTwH5NQJvrEwlBwjKR1TUyAcwjgeHkdpvjJT1sOS5emi75JRPnG1iBdtNMJRYl81QG4nHf0NBZ1nUq9o2oTQcCwFCZ+osIKopRKb2zIDIKN7FbVDVyxqpDhVY/jO6JW1Fg2aZe2su+nWOiKL2I5OJKGvQ9fI++futJPF/og/KUkCCjAAigTEa/ZrQTFszeRQLhPq6kfU3OwvoYTiM3fJO0fB/8hB3NEWfkNOIln60PwN/9kpueP9G01r9maXfYNjw2fziA/tRgRnheTM9DDAtcuQcxhH2hB9a9PlS+FisEcQkq95F9LqofqPogQ58UFAbMTrKaOkDp+92KnyYoVh4PxJFt5JP4nzj/34SdVGVSQfy6KhHLKGJrN5JGMHoUCRrNDPRyxwtohpxDqxnn4j1cCE4FKRM3NZ0gM/rOIrWkYbNSPtA1A2txRFeTOFSL6mBO3e9YH3KxVMIY7LiMrAjGCd9sgW3r04iHfIrLunNudevOYM4qjm/deI0qXBIh/B4zo="
 script:
-  - git clone -b "${TRAVIS_BRANCH}" https://github.com/projectcalico/felix
-  - cd felix
-  - git rev-parse HEAD
-  - git status
-  - make update-tools
-  - make bin/calico-felix ARCH=amd64
-  - make bin/calico-felix ARCH=arm64
-  - make bin/calico-felix ARCH=ppc64le
-notifications:
-  email: false
-deploy:
-  skip_cleanup: true
-  provider: releases
-  file:
-    - bin/calico-felix-amd64
-    - bin/calico-felix-arm64
-    - bin/calico-felix-ppc64le
-  on:
-    repo: Logan2211/felix
-    tags: true
+  - git fetch https://github.com/logan2211/felix-builds master
+  - git checkout FETCH_HEAD
+  - git clone https://github.com/projectcalico/felix /tmp/felix
+  - "git -C /tmp/felix tag -l | egrep '^v?3\\.[0-9\\.]+$' > /tmp/felix_tags"
+  - >
+    for tag in $(cat /tmp/felix_tags); do
+    git tag -a $tag -m "Felix $tag" -m "Automated build of https://github.com/projectcalico/felix/releases/tag/$tag";
+    git push "https://${GITHUB_TOKEN}@github.com/logan2211/felix-builds" $tag > /dev/null 2>&1;
+    done
