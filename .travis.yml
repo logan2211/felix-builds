@@ -1,0 +1,41 @@
+language: go
+services:
+  - docker
+install: []
+script:
+  - git clone -b "${TRAVIS_BRANCH}" https://github.com/projectcalico/felix
+  - cd felix
+  - git rev-parse HEAD
+  - git status
+  - make update-tools
+  - make bin/calico-felix ARCH=amd64
+  - make bin/calico-felix ARCH=arm64
+  - make bin/calico-felix ARCH=ppc64le
+  - ls -lh bin
+  # Delete bin/calico-felix if it is a symlink
+  - '[ ! -L "bin/calico-felix" ] || rm -v bin/calico-felix;'
+  # Delete bin/calico-felix if it is a hardlink
+  - '[ $(stat --format "%h" bin/calico-felix) != "1" ] && rm -v bin/calico-felix || true'
+  - >
+    for file in bin/calico-felix*; do
+    sha256sum $file > $file.sha256sum;
+    done
+notifications:
+  email: false
+deploy:
+  skip_cleanup: true
+  provider: releases
+  api_key:
+    secure: ddhymc60zpvnPRN11JghMHbCE69grf3r0iGIjkddazsu5tSXnVP72CDkNjhBzae2uRsfIddyUuu+usIbFwEZ8A2iiNE/8cyCVWUwo6qdoWvO1ZYHKskJhe41r4k2SCq0r88oFjhKsc3vJPsioQYzY+h8MMYhK3iUCCCp/qm5oT1ci4MeiwYS23XJ0EHEJ5azBhnZAq7ArGY/qe+gzkeYge84dfb+1+L5sj9inlqleMz/pnQTXPmdsgnxLM1waeErE2p4ZouDvFFgaCb6hDpzK3VwZYFydqSMJdNA2sYXCG5hZuIQpp8KFsnZvN6FWG4wdbcdSVfO71xnBlhHa2xBhwLbLqkAaiS08zOOAU2EzBfKt/MJKdZA5Ste9i5miT1Uu5gM6NNL3Ga3s2fkRu748cep7GWxjY4Lj+UBOhLzCQPieujyveYsamvY6eAnoC1y6Z/PKL4Ap1u7mEp0D1ekUSfc429PW22RgGtGN/YpBHCieD6KyYD902YHHExyjEo1KMxYmOxQrQTj2MrnZT5noP/okc5qxMKeL8vkbo9GSXzUDHJyNVTKyklS0mACtbZhWC8HWclVEvJC9ROK6A7v6ZnX1FM5Wx27CqnYi7CotW4R7lwy/6NPvdu5kmrlwQeO962XSiZ/58ZY4TSH0/UohT/1T3KBQhY2zJuKb7zg/5s=
+  file:
+    - bin/calico-felix
+    - bin/calico-felix-amd64
+    - bin/calico-felix-arm64
+    - bin/calico-felix-ppc64le
+    - bin/calico-felix.sha256sum
+    - bin/calico-felix-amd64.sha256sum
+    - bin/calico-felix-arm64.sha256sum
+    - bin/calico-felix-ppc64le.sha256sum
+  on:
+    repo: logan2211/felix-builds
+    tags: true
